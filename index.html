@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cute Receipt - Generator Nota Digital & Upload QRIS</title>
+  <link rel="icon" type="image/png" href="invoice.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    /* Custom Scrollbar untuk Panel Form */
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f472b6; }
+  </style>
+</head>
+<body class="bg-pink-100 min-h-screen p-4 md:p-6 text-gray-700 flex flex-col justify-between">
+
+  <div class="max-w-4xl mx-auto space-y-6 w-full">
+    
+    <!-- HEADER UTAMA HALAMAN -->
+    <header class="text-center space-y-1">
+      <h1 class="text-2xl md:text-3xl font-extrabold text-pink-600 tracking-wide font-['Fredoka']">🧾Cute Receipt🧾</h1>
+      <p class="text-xs md:text-sm text-gray-500 font-medium">makes it easy for you to create product details</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      
+      <!-- PREVIEW NOTA -->
+      <div class="flex flex-col items-center">
+        <div id="receiptCard" class="w-80 bg-white p-5 pb-6 rounded-3xl shadow-lg border relative transition-colors duration-200 overflow-hidden flex flex-col justify-between">
+          
+          <div>
+            <div id="previewWmContainer" class="absolute inset-0 flex items-center justify-center pointer-events-none p-4 transition-all">
+              <img id="previewWmImg" src="" alt="Watermark" class="hidden object-contain max-h-full">
+              <span id="previewWmText" class="font-bold text-center leading-tight break-words">VYOTA STORE</span>
+            </div>
+
+            <div class="relative z-10 mb-3">
+              <div id="logoContainer" class="flex justify-center mb-1.5 hidden">
+                <img id="previewStoreLogo" src="" alt="Logo Toko" class="object-contain transition-all">
+              </div>
+
+              <div class="text-center">
+                <h2 id="previewStore" class="text-lg font-bold tracking-wider text-gray-800">🍀VYOTA STORE🍀</h2>
+                <p id="previewSubtitle" class="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">THIS IS YOUR RECEIPT</p>
+              </div>
+            </div>
+
+            <div class="relative z-10 mt-2 space-y-0.5 border-t border-dashed border-gray-200 pt-2">
+              <div class="flex justify-between items-center text-[11px]">
+                <span id="previewTrx" class="text-gray-500 font-medium">TRX</span>
+                <span class="text-gray-400">cashier : <strong id="previewCashier" class="text-gray-600 font-medium">vyo</strong></span>
+              </div>
+              <div class="flex justify-between items-center text-[11px]">
+                <span id="previewDate" class="text-gray-500">2 september 2026</span>
+                <span id="previewTimeHeader" class="font-semibold text-gray-700">13:15:07</span>
+              </div>
+            </div>
+
+            <!-- LIST PRODUK -->
+            <div id="previewItemsContainer" class="border-t border-dashed border-gray-300 py-2.5 text-xs relative z-10 space-y-2">
+            </div>
+          </div>
+
+          <div>
+            <!-- RINCIAN SUBTOTAL, DISKON, FEE -->
+            <div class="border-t border-dashed border-gray-300 pt-2 text-[11px] space-y-1 relative z-10">
+              <div class="flex justify-between text-gray-500">
+                <span>Subtotal</span>
+                <span id="previewSubtotal">Rp0</span>
+              </div>
+              <div id="previewDiscountRow" class="flex justify-between text-pink-600 hidden">
+                <span>Diskon <span id="previewDiscountLabel"></span></span>
+                <span id="previewDiscount">-Rp0</span>
+              </div>
+              <div id="previewFeeRow" class="flex justify-between text-gray-500 hidden">
+                <span>Fee / Biaya Tambahan</span>
+                <span id="previewFee">+Rp0</span>
+              </div>
+            </div>
+
+            <!-- TOTAL BAYAR -->
+            <div class="relative z-10 my-2.5 p-2.5 bg-pink-50/80 rounded-xl flex justify-between items-center backdrop-blur-[1px]">
+              <div id="previewStamp" class="absolute border-2 font-black px-2.5 py-0.5 rounded uppercase tracking-[0.14em] bg-transparent shadow-xs transition-all duration-200 text-xs" style="top: -1.2rem; left: 1rem; transform: rotate(-12deg); opacity: 1; background-color: transparent; line-height: 1.2; letter-spacing: 0.14em; z-index: 30;">
+                LUNAS
+              </div>
+              
+              <span class="text-[11px] font-semibold text-gray-500 uppercase">Total Bayar</span>
+              <span id="previewTotal" class="text-base font-bold text-gray-800">Rp0</span>
+            </div>
+
+            <div class="text-[11px] text-gray-400 space-y-0.5 relative z-10">
+              <div class="flex justify-between items-center">
+                <span>Bayar via: <strong id="previewPayment" class="text-gray-600">QRIS</strong></span>
+              </div>
+            </div>
+
+            <!-- PREVIEW QRIS -->
+            <div id="qrisContainer" class="mt-3 pt-2.5 border-t border-dashed border-gray-300 text-center relative z-10 hidden">
+              <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">SCAN UNTUK PEMBAYARAN</p>
+              <div id="qrisImgWrapper" class="flex justify-center mb-1">
+                <img id="previewQrisImg" src="" alt="Gambar QRIS Toko" class="object-contain transition-all p-1.5 bg-white rounded-xl border shadow-sm">
+              </div>
+            </div>
+
+            <div id="previewSocials" class="mt-2.5 pt-2 pb-0.5 border-t border-dashed border-gray-300 grid grid-cols-3 gap-1 text-center text-[9px] relative z-10 hidden">
+              <span id="previewWhatsapp" class="truncate"></span>
+              <span id="previewTelegram" class="truncate"></span>
+              <span id="previewInstagram" class="truncate"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-4 flex gap-3">
+          <button onclick="previewReceipt()" class="bg-white hover:bg-pink-50 text-pink-600 border border-pink-200 font-bold py-2 px-5 rounded-full shadow transition text-xs">
+            Preview Dulu
+          </button>
+          <button onclick="downloadReceipt()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-6 rounded-full shadow transition text-xs">
+            Download Nota (PNG)
+          </button>
+        </div>
+      </div>
+
+      <!-- FORM ATUR DETAIL NOTA -->
+      <div class="bg-white/80 backdrop-blur p-6 rounded-3xl shadow-sm border space-y-4 max-h-[75vh] overflow-y-auto custom-scroll flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center border-b pb-2 mb-4 sticky top-0 bg-white/90 backdrop-blur z-20 py-1">
+            <h3 class="font-bold text-lg text-pink-600">Atur Detail Nota</h3>
+            <button onclick="resetSettings()" class="text-xs text-red-400 hover:text-red-600 font-semibold underline">Reset Settingan</button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs font-semibold text-gray-500 block mb-2">Warna Kertas</label>
+              <div class="flex gap-2">
+                <button onclick="changeBg('bg-white')" class="w-6 h-6 rounded-full bg-white border border-gray-300"></button>
+                <button onclick="changeBg('bg-pink-50')" class="w-6 h-6 rounded-full bg-pink-50 border border-pink-200"></button>
+                <button onclick="changeBg('bg-yellow-50')" class="w-6 h-6 rounded-full bg-yellow-50 border border-yellow-200"></button>
+                <button onclick="changeBg('bg-blue-50')" class="w-6 h-6 rounded-full bg-blue-50 border border-blue-200"></button>
+                <button onclick="changeBg('bg-green-50')" class="w-6 h-6 rounded-full bg-green-50 border border-green-200"></button>
+              </div>
+            </div>
+
+            <!-- LOGO TOKO -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-3">
+              <label class="text-xs font-bold text-pink-600 uppercase tracking-wider block">Logo Toko (Di Atas Store)</label>
+              
+              <div>
+                <input type="file" id="inputStoreLogo" accept="image/*" onchange="handleStoreLogoUpload(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-pink-600 hover:file:bg-pink-200">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[11px] font-semibold text-gray-500 block mb-1">Posisi (Align)</label>
+                  <select id="inputLogoAlign" onchange="updateReceipt()" class="w-full p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white">
+                    <option value="center">Tengah</option>
+                    <option value="left">Kiri</option>
+                    <option value="right">Kanan</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-[11px] font-semibold text-gray-500">Ukuran Logo</label>
+                    <span id="logoSizeVal" class="text-[10px] text-gray-400 font-bold">50px</span>
+                  </div>
+                  <input type="range" id="inputLogoSize" min="20" max="120" value="50" oninput="updateReceipt()" class="w-full accent-pink-500 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+              </div>
+            </div>
+
+            <!-- GAMBAR QRIS -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-3">
+              <label class="text-xs font-bold text-pink-600 uppercase tracking-wider block">Gambar QRIS Toko (Di Bawah Nota)</label>
+              
+              <div>
+                <input type="file" id="inputQrisLogo" accept="image/*" onchange="handleQrisUpload(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-pink-600 hover:file:bg-pink-200">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[11px] font-semibold text-gray-500 block mb-1">Posisi (Align)</label>
+                  <select id="inputQrisAlign" onchange="updateReceipt()" class="w-full p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white">
+                    <option value="center">Tengah</option>
+                    <option value="left">Kiri</option>
+                    <option value="right">Kanan</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-[11px] font-semibold text-gray-500">Ukuran QRIS</label>
+                    <span id="qrisSizeVal" class="text-[10px] text-gray-400 font-bold">110px</span>
+                  </div>
+                  <input type="range" id="inputQrisSize" min="40" max="200" value="110" oninput="updateReceipt()" class="w-full accent-pink-500 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+              </div>
+            </div>
+
+            <!-- SOCIAL MEDIA -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-3">
+              <label class="text-xs font-bold text-pink-600 uppercase tracking-wider block">Social Media</label>
+              <div class="grid grid-cols-3 gap-2">
+                <input type="text" id="inputWhatsapp" value="WhatsApp" oninput="updateReceipt()" placeholder="WhatsApp" class="w-full p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white">
+                <input type="text" id="inputTelegram" value="Telegram" oninput="updateReceipt()" placeholder="Telegram" class="w-full p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white">
+                <input type="text" id="inputInstagram" value="Instagram" oninput="updateReceipt()" placeholder="Instagram" class="w-full p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white">
+              </div>
+            </div>
+
+            <!-- WATERMARK -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-3">
+              <div class="flex justify-between items-center">
+                <label class="text-xs font-bold text-pink-600 uppercase tracking-wider">Watermark Logo / Gambar</label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" id="inputWmToggle" checked onchange="updateReceipt()" class="accent-pink-500 w-3.5 h-3.5">
+                  <span class="text-[11px] text-gray-500">Aktif</span>
+                </label>
+              </div>
+
+              <div class="flex gap-4 text-xs font-semibold text-gray-600">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="wmType" value="text" checked onchange="toggleWmType()" class="accent-pink-500"> Teks
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="wmType" value="image" onchange="toggleWmType()" class="accent-pink-500"> Upload Foto
+                </label>
+              </div>
+
+              <div id="wmTextInputGroup">
+                <input type="text" id="inputWmText" value="VYOTA STORE" oninput="updateReceipt()" placeholder="Teks Watermark..." class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400 bg-white">
+              </div>
+
+              <div id="wmImageInputGroup" class="hidden">
+                <input type="file" id="inputWmImage" accept="image/*" onchange="handleImageUpload(event)" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-100 file:text-pink-600 hover:file:bg-pink-200">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-[11px] font-semibold text-gray-500">Ukuran (Size)</label>
+                    <span id="wmSizeVal" class="text-[10px] text-gray-400 font-bold">36px / 150px</span>
+                  </div>
+                  <input type="range" id="inputWmSize" min="20" max="250" value="150" oninput="updateReceipt()" class="w-full accent-pink-500 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-[11px] font-semibold text-gray-500">Opasitas</label>
+                    <span id="wmOpacityVal" class="text-[10px] text-gray-400 font-bold">10%</span>
+                  </div>
+                  <input type="range" id="inputWmOpacity" min="1" max="50" value="10" oninput="updateReceipt()" class="w-full accent-pink-500 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+              </div>
+            </div>
+
+            <!-- STORE METADATA -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs font-semibold text-gray-500 block mb-1">Nama Toko</label>
+                <input type="text" id="inputStore" value="VYOTA STORE 🍀" oninput="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400">
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-500 block mb-1">Stempel Status</label>
+                <select id="inputStatus" onchange="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400">
+                  <option value="LUNAS">LUNAS</option>
+                  <option value="PENDING">PENDING</option>
+                  <option value="CANCEL">CANCELLED</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- STEMPEL CONTROL -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-2">
+              <div class="flex justify-between items-center">
+                <label class="text-xs font-bold text-pink-600 uppercase tracking-wider">Opsi Stempel Status</label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" id="inputStampToggle" checked onchange="updateReceipt()" class="accent-pink-500 w-3.5 h-3.5">
+                  <span class="text-[11px] text-gray-500">Aktifkan Stempel</span>
+                </label>
+              </div>
+
+              <div id="stampControlsGroup" class="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <label class="text-xs font-semibold text-gray-500 block mb-1">Posisi Stempel</label>
+                  <select id="inputStampPos" onchange="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400 bg-white">
+                    <option value="left">Kiri Atas</option>
+                    <option value="center">Tengah</option>
+                    <option value="right">Kanan Bawah</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs font-semibold text-gray-500">Opasitas Stempel</label>
+                    <span id="opacityVal" class="text-[10px] text-gray-400 font-bold">100%</span>
+                  </div>
+                  <input type="range" id="inputOpacity" min="10" max="100" value="100" oninput="updateReceipt()" class="w-full accent-pink-500 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                </div>
+              </div>
+            </div>
+
+            <!-- FORM DAFTAR PRODUK -->
+            <div class="p-3 bg-pink-50/30 rounded-2xl border space-y-3">
+              <div class="flex justify-between items-center">
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Daftar Produk</label>
+                <button onclick="addItemInput()" class="bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1">
+                  <span>+</span> Tambah Produk
+                </button>
+              </div>
+
+              <div id="itemsFormContainer" class="space-y-3">
+              </div>
+            </div>
+
+            <!-- FORM DISKON DAN FEE TAMBAHAN -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-3">
+              <label class="text-xs font-bold text-pink-600 uppercase tracking-wider block">Diskon & Fee Tambahan</label>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[11px] font-semibold text-gray-500 block mb-1">Diskon</label>
+                  <div class="flex gap-1">
+                    <input type="text" id="inputDiscount" value="200" oninput="updateReceipt()" placeholder="0" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400 bg-white">
+                    <select id="inputDiscountType" onchange="updateReceipt()" class="p-2 text-xs border rounded-xl focus:outline-pink-400 bg-white font-bold">
+                      <option value="rp">Rp</option>
+                      <option value="percent">%</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[11px] font-semibold text-gray-500 block mb-1">Fee / Biaya Admin (Rp)</label>
+                  <input type="text" id="inputFee" value="0" oninput="updateReceipt()" placeholder="0" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400 bg-white">
+                </div>
+              </div>
+            </div>
+
+            <!-- NOMOR TRX -->
+            <div class="p-3 bg-pink-50/50 rounded-2xl border border-pink-100 space-y-2">
+              <label class="text-xs font-bold text-pink-600 uppercase tracking-wider block">Nomor TRX</label>
+              <div class="flex items-center bg-white border rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-pink-400">
+                <span class="pl-3 pr-1 text-xs font-bold text-gray-500 select-none">TRX</span>
+                <input type="text" id="inputTrx" value="20260905225" oninput="updateReceipt()" placeholder="20260905225" class="w-full p-2 text-sm focus:outline-none bg-transparent">
+              </div>
+            </div>
+
+            <!-- WAKTU & METODE BAYAR -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-gray-500">Jam Stamp</label>
+                  <button onclick="setCurrentTimeOnly()" class="text-[10px] text-pink-500 hover:underline font-semibold">⚡Sekarang</button>
+                </div>
+                <input type="text" id="inputTime" value="15:24:00" oninput="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400">
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-semibold text-gray-500">Tanggal</label>
+                  <button onclick="setCurrentDateOnly()" class="text-[10px] text-pink-500 hover:underline font-semibold">⚡Hari Ini</button>
+                </div>
+                <input type="date" id="inputDate" onchange="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400 bg-white">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-xs font-semibold text-gray-500 block mb-1">Metode Bayar</label>
+                <input type="text" id="inputPayment" value="QRIS" oninput="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400">
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-500 block susp mb-1">Nama Kasir</label>
+                <input type="text" id="inputCashier" value="vyo" oninput="updateReceipt()" class="w-full p-2 text-sm border rounded-xl focus:outline-pink-400">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FOOTER UTAMA HALAMAN -->
+  <footer class="text-center pt-6 pb-2 space-y-1">
+    <p class="text-xs text-gray-500 font-medium">made with ❤️ by piyoo >.< </p>
+  </footer>
+
+  <script>
+    let uploadedImageSrc = '';
+    let uploadedStoreLogoSrc = '';
+    let uploadedQrisSrc = '';
+    let currentPaperBg = 'bg-white';
+    
+    let products = [
+      { id: Date.now(), name: 'Capcut Norenew', qty: 1, price: '27.200', desc: '1 bulan' }
+    ];
+
+    function formatRupiah(number) {
+      return new Intl.NumberFormat('id-ID').format(number);
+    }
+
+    function formatDateIndonesian(dateString) {
+      if (!dateString) return '';
+      const dateObj = new Date(dateString);
+      if (isNaN(dateObj.getTime())) return dateString;
+      return dateObj.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).toLowerCase();
+    }
+
+    function saveConfigToStorage() {
+      const config = {
+        store: document.getElementById('inputStore').value,
+        status: document.getElementById('inputStatus').value,
+        cashier: document.getElementById('inputCashier').value,
+        payment: document.getElementById('inputPayment').value,
+        date: document.getElementById('inputDate').value,
+        trx: document.getElementById('inputTrx').value,
+        bg: currentPaperBg,
+        logoAlign: document.getElementById('inputLogoAlign').value,
+        logoSize: document.getElementById('inputLogoSize').value,
+        storeLogoSrc: uploadedStoreLogoSrc,
+        qrisAlign: document.getElementById('inputQrisAlign').value,
+        qrisSize: document.getElementById('inputQrisSize').value,
+        qrisSrc: uploadedQrisSrc,
+        whatsapp: document.getElementById('inputWhatsapp').value,
+        telegram: document.getElementById('inputTelegram').value,
+        instagram: document.getElementById('inputInstagram').value,
+        wmToggle: document.getElementById('inputWmToggle').checked,
+        wmType: document.querySelector('input[name="wmType"]:checked').value,
+        wmText: document.getElementById('inputWmText').value,
+        wmSize: document.getElementById('inputWmSize').value,
+        wmOpacity: document.getElementById('inputWmOpacity').value,
+        wmImageSrc: uploadedImageSrc,
+        stampToggle: document.getElementById('inputStampToggle').checked,
+        stampPos: document.getElementById('inputStampPos').value,
+        stampOpacity: document.getElementById('inputOpacity').value
+      };
+
+      localStorage.setItem('vyota_nota_config', JSON.stringify(config));
+    }
+
+    function loadConfigFromStorage() {
+      const saved = localStorage.getItem('vyota_nota_config');
+      
+      const todayIso = new Date().toISOString().split('T')[0];
+      document.getElementById('inputDate').value = todayIso;
+
+      if (!saved) return;
+
+      try {
+        const config = JSON.parse(saved);
+
+        document.getElementById('inputStore').value = config.store || '🍀 VYOTA STORE 🍀';
+        document.getElementById('inputStatus').value = config.status || 'LUNAS';
+        document.getElementById('inputCashier').value = config.cashier || 'vyo';
+        document.getElementById('inputPayment').value = config.payment || 'QRIS';
+        if (config.date) {
+          document.getElementById('inputDate').value = config.date;
+        }
+        if (config.trx !== undefined) {
+          document.getElementById('inputTrx').value = config.trx;
+        }
+        
+        if (config.bg) changeBg(config.bg, false);
+
+        if (config.logoAlign) document.getElementById('inputLogoAlign').value = config.logoAlign;
+        if (config.logoSize) document.getElementById('inputLogoSize').value = config.logoSize;
+        if (config.storeLogoSrc) uploadedStoreLogoSrc = config.storeLogoSrc;
+
+        if (config.qrisAlign) document.getElementById('inputQrisAlign').value = config.qrisAlign;
+        if (config.qrisSize) document.getElementById('inputQrisSize').value = config.qrisSize;
+        if (config.qrisSrc) uploadedQrisSrc = config.qrisSrc;
+
+        if (config.whatsapp) document.getElementById('inputWhatsapp').value = config.whatsapp;
+        if (config.telegram) document.getElementById('inputTelegram').value = config.telegram;
+        if (config.instagram) document.getElementById('inputInstagram').value = config.instagram;
+
+        if (config.wmToggle !== undefined) document.getElementById('inputWmToggle').checked = config.wmToggle;
+        if (config.wmType) {
+          document.querySelector(`input[name="wmType"][value="${config.wmType}"]`).checked = true;
+          toggleWmType(false);
+        }
+        if (config.wmText) document.getElementById('inputWmText').value = config.wmText;
+        if (config.wmSize) document.getElementById('inputWmSize').value = config.wmSize;
+        if (config.wmOpacity) document.getElementById('inputWmOpacity').value = config.wmOpacity;
+        if (config.wmImageSrc) uploadedImageSrc = config.wmImageSrc;
+
+        if (config.stampToggle !== undefined) document.getElementById('inputStampToggle').checked = config.stampToggle;
+        if (config.stampPos) document.getElementById('inputStampPos').value = config.stampPos;
+        if (config.stampOpacity) document.getElementById('inputOpacity').value = config.stampOpacity;
+
+      } catch (e) {
+        console.error("Gagal membaca setting tersimpan", e);
+      }
+    }
+
+    function resetSettings() {
+      if (confirm('Yakin mau reset semua gambar dan settingan toko ke awal?')) {
+        localStorage.removeItem('vyota_nota_config');
+        location.reload();
+      }
+    }
+
+    function addItemInput() {
+      products.push({ id: Date.now(), name: '', qty: 1, price: '0', desc: '' });
+      renderFormItems();
+      updateReceipt();
+    }
+
+    function removeItemInput(id) {
+      if (products.length <= 1) {
+        alert('Minimal harus ada 1 produk.');
+        return;
+      }
+      products = products.filter(p => p.id !== id);
+      renderFormItems();
+      updateReceipt();
+    }
+
+    function renderFormItems() {
+      const container = document.getElementById('itemsFormContainer');
+      container.innerHTML = '';
+
+      products.forEach((p, index) => {
+        const itemHtml = `
+          <div class="p-3 bg-white rounded-xl border border-gray-200 relative space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-[11px] font-bold text-gray-400">Produk #${index + 1}</span>
+              ${products.length > 1 ? `<button onclick="removeItemInput(${p.id})" class="text-red-400 hover:text-red-600 text-xs font-bold">✕ Hapus</button>` : ''}
+            </div>
+            
+            <div>
+              <input type="text" value="${p.name}" oninput="updateProductData(${p.id}, 'name', this.value)" placeholder="Nama Produk" class="w-full p-1.5 text-xs border rounded-lg focus:outline-pink-400">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <input type="number" min="1" value="${p.qty}" oninput="updateProductData(${p.id}, 'qty', this.value)" placeholder="Qty" class="w-full p-1.5 text-xs border rounded-lg focus:outline-pink-400">
+              </div>
+              <div>
+                <input type="text" value="${p.price}" oninput="updateProductData(${p.id}, 'price', this.value)" placeholder="Harga Rp" class="w-full p-1.5 text-xs border rounded-lg focus:outline-pink-400">
+              </div>
+            </div>
+
+            <div>
+              <input type="text" value="${p.desc}" oninput="updateProductData(${p.id}, 'desc', this.value)" placeholder="Keterangan singkat (opsional)" class="w-full p-1.5 text-xs border rounded-lg focus:outline-pink-400">
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', itemHtml);
+      });
+    }
+
+    function updateProductData(id, field, value) {
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product[field] = value;
+        updateReceipt();
+      }
+    }
+
+    function toggleWmType(shouldUpdate = true) {
+      const type = document.querySelector('input[name="wmType"]:checked').value;
+      const textGroup = document.getElementById('wmTextInputGroup');
+      const imgGroup = document.getElementById('wmImageInputGroup');
+      
+      if (type === 'text') {
+        textGroup.classList.remove('hidden');
+        imgGroup.classList.add('hidden');
+      } else {
+        textGroup.classList.add('hidden');
+        imgGroup.classList.remove('hidden');
+      }
+      if (shouldUpdate) updateReceipt();
+    }
+
+    function handleStoreLogoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedStoreLogoSrc = e.target.result;
+          updateReceipt();
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleQrisUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedQrisSrc = e.target.result;
+          updateReceipt();
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedImageSrc = e.target.result;
+          updateReceipt();
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updateReceipt() {
+      const store = document.getElementById('inputStore').value;
+      const time = document.getElementById('inputTime').value;
+      const payment = document.getElementById('inputPayment').value;
+      const rawDate = document.getElementById('inputDate').value;
+      const date = formatDateIndonesian(rawDate) || rawDate;
+      const trxVal = document.getElementById('inputTrx').value.trim();
+      const cashier = document.getElementById('inputCashier').value;
+      const status = document.getElementById('inputStatus').value;
+      
+      const stampToggle = document.getElementById('inputStampToggle').checked;
+      const stampPos = document.getElementById('inputStampPos').value;
+      const opacityVal = document.getElementById('inputOpacity').value;
+
+      const previewContainer = document.getElementById('previewItemsContainer');
+      previewContainer.innerHTML = '';
+      
+      let subtotal = 0;
+
+      products.forEach(p => {
+        const qty = parseInt(p.qty) || 1;
+        const rawPrice = (p.price || '0').toString().replace(/[^0-9]/g, '');
+        const priceNum = parseInt(rawPrice) || 0;
+        const itemTotal = priceNum * qty;
+        subtotal += itemTotal;
+
+        const itemPreviewHtml = `
+          <div>
+            <div class="flex justify-between items-start font-semibold">
+              <div>
+                <span>${p.name || 'Nama Produk'}</span>
+                <span class="text-[10px] text-gray-500 font-normal block">${qty}x @ Rp${formatRupiah(priceNum)}</span>
+              </div>
+              <span class="font-semibold">Rp${formatRupiah(itemTotal)}</span>
+            </div>
+            ${p.desc ? `<span class="text-[10px] text-gray-400 block mt-0.5">${p.desc}</span>` : ''}
+          </div>
+        `;
+        previewContainer.insertAdjacentHTML('beforeend', itemPreviewHtml);
+      });
+
+      const rawDiscount = (document.getElementById('inputDiscount').value || '0').toString().replace(/[^0-9]/g, '');
+      const discountVal = parseInt(rawDiscount) || 0;
+      const discountType = document.getElementById('inputDiscountType').value;
+
+      let discountAmount = discountType === 'percent' ? Math.round((subtotal * discountVal) / 100) : discountVal;
+      const rawFee = (document.getElementById('inputFee').value || '0').toString().replace(/[^0-9]/g, '');
+      const feeAmount = parseInt(rawFee) || 0;
+      const grandTotal = Math.max(0, subtotal - discountAmount + feeAmount);
+
+      document.getElementById('previewSubtotal').innerText = 'Rp' + formatRupiah(subtotal);
+
+      const discountRow = document.getElementById('previewDiscountRow');
+      if (discountAmount > 0) {
+        discountRow.classList.remove('hidden');
+        document.getElementById('previewDiscountLabel').innerText = discountType === 'percent' ? `(${discountVal}%)` : '';
+        document.getElementById('previewDiscount').innerText = '-Rp' + formatRupiah(discountAmount);
+      } else {
+        discountRow.classList.add('hidden');
+      }
+
+      const feeRow = document.getElementById('previewFeeRow');
+      if (feeAmount > 0) {
+        feeRow.classList.remove('hidden');
+        document.getElementById('previewFee').innerText = '+Rp' + formatRupiah(feeAmount);
+      } else {
+        feeRow.classList.add('hidden');
+      }
+
+      document.getElementById('previewTotal').innerText = 'Rp' + formatRupiah(grandTotal);
+
+      const logoContainer = document.getElementById('logoContainer');
+      const logoImg = document.getElementById('previewStoreLogo');
+      const logoAlign = document.getElementById('inputLogoAlign').value;
+      const logoSize = document.getElementById('inputLogoSize').value;
+
+      if (uploadedStoreLogoSrc) {
+        logoContainer.classList.remove('hidden');
+        logoImg.src = uploadedStoreLogoSrc;
+        logoImg.style.width = logoSize + 'px';
+        logoContainer.className = logoAlign === 'left' ? "flex justify-start mb-1.5" : logoAlign === 'right' ? "flex justify-end mb-1.5" : "flex justify-center mb-1.5";
+      } else {
+        logoContainer.classList.add('hidden');
+      }
+      document.getElementById('logoSizeVal').innerText = logoSize + 'px';
+
+      const qrisContainer = document.getElementById('qrisContainer');
+      const qrisImgWrapper = document.getElementById('qrisImgWrapper');
+      const qrisImg = document.getElementById('previewQrisImg');
+      const qrisAlign = document.getElementById('inputQrisAlign').value;
+      const qrisSize = document.getElementById('inputQrisSize').value;
+
+      if (uploadedQrisSrc) {
+        qrisContainer.classList.remove('hidden');
+        qrisImg.src = uploadedQrisSrc;
+        qrisImg.style.width = qrisSize + 'px';
+        qrisImgWrapper.className = qrisAlign === 'left' ? "flex justify-start mb-1" : qrisAlign === 'right' ? "flex justify-end mb-1" : "flex justify-center mb-1";
+      } else {
+        qrisContainer.classList.add('hidden');
+      }
+      document.getElementById('qrisSizeVal').innerText = qrisSize + 'px';
+
+      const socialValues = {
+        whatsapp: document.getElementById('inputWhatsapp').value.trim(),
+        telegram: document.getElementById('inputTelegram').value.trim(),
+        instagram: document.getElementById('inputInstagram').value.trim()
+      };
+      const socialsPreview = document.getElementById('previewSocials');
+      document.getElementById('previewWhatsapp').innerText = socialValues.whatsapp;
+      document.getElementById('previewTelegram').innerText = socialValues.telegram;
+      document.getElementById('previewInstagram').innerText = socialValues.instagram;
+      socialsPreview.classList.toggle('hidden', !Object.values(socialValues).some(Boolean));
+
+      const wmToggle = document.getElementById('inputWmToggle').checked;
+      const wmType = document.querySelector('input[name="wmType"]:checked').value;
+      const wmSize = document.getElementById('inputWmSize').value;
+      const wmOpacity = document.getElementById('inputWmOpacity').value;
+
+      const container = document.getElementById('previewWmContainer');
+      const textEl = document.getElementById('previewWmText');
+      const imgEl = document.getElementById('previewWmImg');
+
+      if (wmToggle) {
+        container.style.display = 'flex';
+        container.style.opacity = wmOpacity / 100;
+
+        if (wmType === 'text') {
+          imgEl.classList.add('hidden');
+          textEl.classList.remove('hidden');
+          textEl.innerText = document.getElementById('inputWmText').value;
+          textEl.style.fontSize = (wmSize / 3) + 'px';
+        } else {
+          textEl.classList.add('hidden');
+          if (uploadedImageSrc) {
+            imgEl.classList.remove('hidden');
+            imgEl.src = uploadedImageSrc;
+            imgEl.style.width = wmSize + 'px';
+          }
+        }
+      } else {
+        container.style.display = 'none';
+      }
+
+      document.getElementById('wmSizeVal').innerText = wmSize + 'px';
+      document.getElementById('wmOpacityVal').innerText = wmOpacity + '%';
+
+      document.getElementById('previewStore').innerText = store || 'NAMA TOKO';
+      document.getElementById('previewTrx').innerText = 'TRX #' + (trxVal || '');
+      document.getElementById('previewTimeHeader').innerText = time;
+      document.getElementById('previewPayment').innerText = payment;
+      document.getElementById('previewDate').innerText = date;
+      document.getElementById('previewCashier').innerText = cashier;
+      document.getElementById('opacityVal').innerText = opacityVal + '%';
+
+      const stamp = document.getElementById('previewStamp');
+      const stampControls = document.getElementById('stampControlsGroup');
+
+      if (stampToggle) {
+        stamp.style.display = 'block';
+        stampControls.classList.remove('opacity-40', 'pointer-events-none');
+        stamp.innerText = status;
+
+        stamp.style.opacity = opacityVal / 100;
+        stamp.style.left = stamp.style.right = stamp.style.top = stamp.style.bottom = stamp.style.transform = '';
+
+        if (stampPos === 'left') {
+          stamp.style.top = '-1.2rem'; stamp.style.left = '1rem'; stamp.style.transform = 'rotate(-12deg)';
+        } else if (stampPos === 'center') {
+          stamp.style.top = '50%'; stamp.style.left = '50%'; stamp.style.transform = 'translate(-50%, -50%) rotate(-12deg)';
+        } else if (stampPos === 'right') {
+          stamp.style.bottom = '-1.2rem'; stamp.style.right = '1rem'; stamp.style.transform = 'rotate(-12deg)';
+        }
+
+        let colorClasses = "absolute border-2 font-black px-2.5 py-0.5 rounded uppercase tracking-[0.14em] bg-transparent transition-all duration-200 text-xs ";
+        colorClasses += status === 'LUNAS' ? "border-pink-500 text-pink-500" : status === 'PENDING' ? "border-yellow-500 text-yellow-500" : "border-red-500 text-red-500";
+        stamp.className = colorClasses;
+        stamp.style.backgroundColor = 'transparent';
+        stamp.style.lineHeight = '1.2';
+        stamp.style.letterSpacing = '0.14em';
+        stamp.style.zIndex = '30';
+      } else {
+        stamp.style.display = 'none';
+        stampControls.classList.add('opacity-40', 'pointer-events-none');
+      }
+
+      saveConfigToStorage();
+    }
+
+    function setCurrentTimeOnly() {
+      const now = new Date();
+      document.getElementById('inputTime').value = now.toTimeString().split(' ')[0];
+      updateReceipt();
+    }
+
+    function setCurrentDateOnly() {
+      const now = new Date();
+      const todayIso = now.toISOString().split('T')[0];
+      document.getElementById('inputDate').value = todayIso;
+      updateReceipt();
+    }
+
+    function changeBg(colorClass, shouldUpdate = true) {
+      currentPaperBg = colorClass;
+      const card = document.getElementById('receiptCard');
+      
+      // Hapus kelas warna kertas lama yang berawalan bg- (kecuali bg-white) atau kelas warna kustom
+      const bgClassesToRemove = ['bg-white', 'bg-pink-50', 'bg-yellow-50', 'bg-blue-50', 'bg-green-50'];
+      bgClassesToRemove.forEach(cls => card.classList.remove(cls));
+      
+      // Tambahkan kelas warna baru
+      card.classList.add(colorClass);
+
+      if (shouldUpdate) updateReceipt();
+    }
+
+    function previewReceipt() {
+      const card = document.getElementById('receiptCard');
+      html2canvas(card, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        const dataUrl = canvas.toDataURL('image/png');
+        const previewWindow = window.open('', '_blank', 'width=440,height=820');
+        if (previewWindow) {
+          previewWindow.document.write(`
+            <html>
+              <head>
+                <title>Preview Nota</title>
+                <style>
+                  body {
+                    margin: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    background: #fdf2f8;
+                    padding: 20px;
+                    font-family: Arial, sans-serif;
+                  }
+                  img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 18px;
+                    box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+                  }
+                </style>
+              </head>
+              <body>
+                <img src="${dataUrl}" alt="Preview Nota" />
+              </body>
+            </html>
+          `);
+          previewWindow.document.close();
+        }
+      });
+    }
+
+    function downloadReceipt() {
+      const card = document.getElementById('receiptCard');
+      html2canvas(card, { scale: 2, useCORS: true, allowTaint: true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'nota-pembayaran.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    renderFormItems();
+    loadConfigFromStorage();
+    updateReceipt();
+  </script>
+</body>
+</html>
